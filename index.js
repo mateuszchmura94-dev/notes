@@ -33,7 +33,16 @@ db.connect()
 
 //Strona główna
 app.get("/", async (req, res) => {
-    res.render("index.ejs");
+    try {
+        const result = await db.query("SELECT * FROM bands");
+        const bands = result.rows;
+        console.log(bands);
+        res.render("index.ejs", { bandList: bands });
+    } catch (err) {
+        console.error("Błąd podczas pobierania listy zespołów:", err.stack);
+        res.status(500).send("Wystąpił błąd serwera");
+    }
+
 });
 
 //Listening

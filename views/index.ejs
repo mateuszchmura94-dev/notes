@@ -1,11 +1,15 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BAND</title>
-</head>
-<body>
-    band 
-</body>
-</html>
+<%- include('partials/header.ejs'); -%>
+
+
+<div class="row">
+    <div class="card">
+        <% for(let band of bandList) { %>
+      <h2><%= band.name %></h2>
+      <h5>Score: <%= band.score %></h5>
+      <img src="path/to/album/image.jpg" alt="Album Image" style="width:100%; height:auto;">
+      <p>Note: <%= band.note %></p>
+      <% } %>
+    </div>
+</div>
+
+<%- include('partials/footer.ejs'); -%>
