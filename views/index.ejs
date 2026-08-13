@@ -10,14 +10,14 @@
     <div class="card">
         <% for(let band of bandList) { %>
       <h2><%= band.name %></h2>
-      <h5>Score: <%= band.score %></h5>
+      <h5>Wynik: <%= band.score %></h5>
       <img src="<%= band.img %>" alt="Album Image" style="width:300px; height:auto;">
-      <p>Note: <%= band.note %></p>
-      <form action="/delete:<%= band.id %>" method="post">
-          <input type="submit"  name="deleteBandId" value="Usuń">
+      <p>Uwagi : <%= band.note %></p>
+      <form action="/delete/<%= band.id %>" method="post">
+          <input type="submit" value="Usuń">
       </form>
-      <form action="/edit:<%= band.id %>" method="post">
-          <input type="submit"  name="editBandId" value="Edytuj">
+      <form action="/edit/<%= band.id %>" method="post">
+          <input type="submit" value="Edytuj">
       </form>
       <% } %>
     </div>

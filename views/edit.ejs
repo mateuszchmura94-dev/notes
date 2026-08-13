@@ -1,0 +1,10 @@
+<%- include('partials/header.ejs'); -%>
+
+<form action="/update/<%= editBand.id %>" method="post">
+    <input type="text" value="<%= editBand.name %>"name="bandName">
+    <input type="number" name="bandScore" value="<%= editBand.score %>">
+    <input type="text" name="bandNote" value="<%= editBand.note %>">
+    <input type="submit" value="Zapisz">
+</form>
+
+<%- include('partials/footer.ejs'); -%>

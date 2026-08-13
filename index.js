@@ -36,24 +36,23 @@ async function fetchImg(bandName) {
     const link = response.data.artists[0].strArtistThumb;
     return link;
 }
+
+async function allBands () {
+        const result = await db.query("SELECT * FROM bands");
+        
+    return result.rows
+};
 //Strona główna
 app.get("/", async (req, res) => {
     try {
-        const result = await db.query("SELECT * FROM bands");
-        const bands = result.rows;
+        var bands = await allBands();
         await Promise.all(bands.map(async (band) => {
             const pic = await fetchImg(band.name);
             band.img = pic;
-        }))
+        
+        }));
        
-       
-      //  bands.forEach(async (band) => {
-      ////      const pic = await fetchImg(band.name);
-      //      band.img = pic;
-      //      console.log(pic);
-      //  });
-       
-        //obr.artists[0].strArtistThumb
+
         console.log(bands);
         res.render("index.ejs", { bandList: bands });
     } catch (err) {
@@ -63,14 +62,23 @@ app.get("/", async (req, res) => {
     
 
 });
-app.post("/delete:id", async (req, res) => {
+app.post("/delete/:id", async (req, res) => {
         console.log(req.params.id);
+        try{
+        const toDelete = req.params.id;
+        const result = await db.query("DELETE FROM bands WHERE id = $1", [toDelete]);
         res.redirect("/");
+        } catch (err) {
+            console.error("Błąd podczas usuwania zespołu:", err.stack);
+            res.status(500).send("Wystąpił błąd serwera");
+        };
     
 });
-app.post("/edit:id", async (req, res) => {
-        console.log(req.params.id);
-        res.redirect("/");
+app.post("/edit/:id", async (req, res) => {
+        const bands = await allBands();
+        const toEdit = bands.find(band => band.id == req.params.id );
+        console.log(req.params.id, toEdit);
+        res.render("edit.ejs", { editBand: toEdit });
     
 });
 
@@ -78,6 +86,18 @@ app.post("/add", async (req, res) => {
     const { bandName, bandScore, bandNote } = req.body;
     try {
         await db.query("INSERT INTO bands (name, score, note) VALUES ($1, $2, $3)", [bandName, bandScore, bandNote]);
+        res.redirect("/");
+    } catch (err) {
+        console.error("Błąd podczas dodawania zespołu:", err.stack);
+        res.status(500).send("Wystąpił błąd serwera");
+    }
+});
+
+app.post("/update/:id", async (req, res) => {
+    console.log(req.params.id);
+    const { bandName, bandScore, bandNote } = req.body;
+    try {
+        await db.query("UPDATE bands SET name = $1, score = $2, note = $3 WHERE id = $4", [bandName, bandScore, bandNote, req.params.id]);
         res.redirect("/");
     } catch (err) {
         console.error("Błąd podczas dodawania zespołu:", err.stack);
