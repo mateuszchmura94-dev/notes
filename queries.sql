@@ -6,6 +6,7 @@ id SERIAL PRIMARY KEY,
 name VARCHAR(100) UNIQUE NOT NULL,
 add_date DATE DEFAULT CURRENT_DATE,
 note TEXT,
+img VARCHAR(200);
 score INT CHECK (score >= 0 AND score <= 5)
 );
 
@@ -14,7 +15,8 @@ id SERIAL PRIMARY KEY,
 name VARCHAR(100) NOT NULL,
 add_date DATE DEFAULT CURRENT_DATE,
 note TEXT,
-score INT CHECK (score >= 0 AND score <= 5),
+score INT CHECK (score >= 0 AND score <= 5)
+img VARCHAR(200),
 band_id int NOT NULL REFERENCES bands(id)
 );
 

@@ -1,8 +1,8 @@
 <%- include('partials/header.ejs'); -%>
-
+<h1>Moje ulubione zespoły</h1>
 <form action="/add" method="post">
     <input type="text" name="bandName" placeholder="Nazwa zespołu">
-    <input type="number" name="bandScore" placeholder="Ocena">
+    <input type="number" name="bandScore" placeholder="Ocena" max="5" min="1">
     <input type="text" name="bandNote" placeholder="Uwagi">
     <input type="submit" value="Dodaj zespół">
 </form>
@@ -11,7 +11,8 @@
         <% for(let band of bandList) { %>
       <h2><%= band.name %></h2>
       <h5>Wynik: <%= band.score %></h5>
-      <img src="<%= band.img %>" alt="Album Image" style="width:300px; height:auto;">
+      <a href="/<%= band.id %>">
+      <img src="<%= band.img %>" alt="Album Image" style="width:300px; height:auto;"></a>
       <p>Uwagi : <%= band.note %></p>
       <form action="/delete/<%= band.id %>" method="post">
           <input type="submit" value="Usuń">

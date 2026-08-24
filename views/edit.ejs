@@ -1,9 +1,13 @@
 <%- include('partials/header.ejs'); -%>
-
-<form action="/update/<%= editBand.id %>" method="post">
-    <input type="text" value="<%= editBand.name %>"name="bandName">
-    <input type="number" name="bandScore" value="<%= editBand.score %>">
-    <input type="text" name="bandNote" value="<%= editBand.note %>">
+<% if (locals.bandId) { %>
+<form action="/update/<%= bandId %>/<%= edited.id %>" method="post">
+    <% } else { %>
+    <form action="/update/<%= edited.id %>" method="post">
+    <% } %>
+    
+    <input type="text" value="<%= edited.name %>" name="name">
+    <input type="number" name="score" value="<%= edited.score %>">
+    <input type="text" name="note" value="<%= edited.note %>">
     <input type="submit" value="Zapisz">
 </form>
 
