@@ -1,0 +1,41 @@
+<%- include('partials/header.ejs'); -%>
+<article class="album-card">
+	<div class="album-card__header">
+		<% if (album.image || album.cover) { %>
+			<img
+				class="album-card__image"
+				src="<%= album.image || album.cover %>"
+				alt="<%= album.title || album.name %> album cover"
+			>
+		<% } %>
+
+		<div class="album-card__details">
+			<h2><%= album.title || album.name %></h2>
+			<% if (album.artist || album.band) { %>
+				<p><%= album.artist || album.band %></p>
+			<% } %>
+		</div>
+	</div>
+
+	<h3>Songs</h3>
+	<% const albumSongs = album.songs || songs || []; %>
+	<% if (albumSongs.length) { %>
+		<ol class="album-card__songs">
+			<% albumSongs.forEach((song) => { %>
+				<li>
+					<% if (song.url || song.link) { %>
+						<a href="<%= song.url || song.link %>">
+							<%= song.title || song.name %>
+						</a>
+					<% } else { %>
+						<span><%= song.title || song.name || song %></span>
+					<% } %>
+				</li>
+			<% }) %>
+		</ol>
+	<% } else { %>
+		<p>No songs found for this album.</p>
+	<% } %>
+</article>
+
+<%- include('partials/footer.ejs'); -%>

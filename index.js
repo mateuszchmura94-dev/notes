@@ -79,6 +79,8 @@ app.get("/", async (req, res) => {
     
 
 });
+
+//usuwanie zespołu
 app.post("/delete/:id", async (req, res) => {
         try{
         const toDelete = req.params.id;
@@ -90,6 +92,20 @@ app.post("/delete/:id", async (req, res) => {
         };
     
 });
+//usuwanie albumu
+app.post("/delete/album/:id", async (req, res) => {
+        try{
+        const toDelete = req.params.id;
+        const result = await db.query("DELETE FROM albums WHERE id = $1", [toDelete]);
+        console.log(req.params);
+        res.redirect("/");
+        } catch (err) {
+            console.error("Błąd podczas usuwania płyty:", err.stack);
+            res.status(500).send("Wystąpił błąd serwera");
+        };
+    
+});
+//edytowanie zespołu
 app.post("/edit/:bandId", async (req, res) => {
         const bands = await allBands();
         const toEdit = bands.find(band => band.id == req.params.bandId );
@@ -100,13 +116,12 @@ app.post("/edit/:bandId", async (req, res) => {
         });
     
 });
-
-app.post("/edit/:bandId/:albumId", async (req, res) => {
+//edytowanie albumu
+app.post("/edit/album/:albumId", async (req, res) => {
         const album = await getAlbum(req.params.albumId);
         res.render("edit.ejs", { 
             edited: album[0], 
             title: album[0].name,
-            bandId: req.params.bandId
         });
     
 });
@@ -135,11 +150,12 @@ app.post("/update/:id", async (req, res) => {
 });
 
 
-app.post("/update/:bandId/:albumId", async (req, res) => {
+app.post("/update/album/:albumId", async (req, res) => {
     const { name, score, note } = req.body;
+    console.log(req.body);
     try {
         await db.query("UPDATE albums SET name = $1, score = $2, note = $3 WHERE id = $4", [name, score, note, req.params.albumId]);
-        res.redirect("/" + req.params.bandId);
+        res.redirect("/");
     } catch (err) {
         console.error("Błąd podczas edytowania płyty:", err.stack);
         res.status(500).send("Wystąpił błąd serwera");

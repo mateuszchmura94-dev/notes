@@ -22,10 +22,10 @@
       <a href="/<%= band.id %>/<%= album.id %>">
       <img src="<%= album.img %>" alt="Album Image" style="width:300px; height:auto;"></a>
       <p>Uwagi : <%= album.note %></p>
-      <form action="/delete/<%= album.id %>" method="post">
+      <form action="/delete/album/<%= album.id %>" method="post">
           <input type="submit" value="Usuń">
       </form>
-      <form action="/edit/<%= band.id %>/<%= album.id %>" method="post">
+      <form action="/edit/album/<%= album.id %>" method="post">
           <input type="submit" value="Edytuj">
       </form>
       <% } %>

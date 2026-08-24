@@ -1,9 +1,9 @@
 <%- include('partials/header.ejs'); -%>
-<% if (locals.bandId) { %>
-<form action="/update/<%= bandId %>/<%= edited.id %>" method="post">
-    <% } else { %>
+<% if (edited.band_id) { %>
+    <form action="/update/album/<%= edited.id %>" method="post">
+<% } else { %>
     <form action="/update/<%= edited.id %>" method="post">
-    <% } %>
+<% } %>
     
     <input type="text" value="<%= edited.name %>" name="name">
     <input type="number" name="score" value="<%= edited.score %>">
