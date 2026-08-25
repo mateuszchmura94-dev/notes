@@ -1,41 +1,43 @@
 <%- include('partials/header.ejs'); -%>
 
-<h1><%= band.name %></h1>
+<h1><%= data[0].band_name %></h1>
 <div class="row">
-    <div class="card">
-      <h5>Wynik: <%= band.score %></h5>
-      <img src="<%= band.img %>" alt="Album Image" style="width: 100%; height:auto;">
-      <p>Uwagi : <%= band.note %></p>
-    </div>
-   <form action="/addalbum/<%= band.id %>" method="post">
+  <div class="card">
+    <h5>Wynik: <%= data[0].band_score %></h5>
+    <img src="<%= data[0].band_img %>" alt="Album Image"
+      style="width: 100%; height:auto;">
+    <p>Uwagi : <%= data[0].band_note %></p>
+  </div>
+  <form action="/add/album/<%= data[0].band_id %>" method="post">
     <input type="text" name="albumName" placeholder="Nazwa płyty">
-    <input type="number" name="albumScore" placeholder="Ocena">
+    <input type="number" name="albumScore" placeholder="Ocena" max="5" min="1">
     <input type="text" name="albumNote" placeholder="Uwagi">
-    <input type="hidden" name=bandName value= "<%= band.name %>">
+    <input type="hidden" name="bandName" value="<%= data[0].band_name %>">
     <input type="submit" value="Dodaj płytę">
-</form>
-   
-    <div class="card">
-        <% for(let album of albumsList) { %>
-      <h2><%= album.name %></h2>
-      <h5>Wynik: <%= album.score %></h5>
-      
-      <form action="/albums/<%= album.id %>" method="GET">
-  <input type="hidden" name="bandId" value="<%= band.id %>" />
-  <input type="image" src="<%= album.img %>" alt="img" width="200px"/>
-</form>
+  </form>
+  <% if (data[0].album_id) { %>
+  <div class="card">
+    <% for(let album of data) { %>
+    <h2><%= album.album_name %></h2>
+    <h5>Wynik: <%= album.album_score %></h5>
 
-     
-      
-      <p>Uwagi : <%= album.note %></p>
-      <form action="/delete/album/<%= album.id %>" method="post">
-          <input type="submit" value="Usuń">
-      </form>
-      <form action="/edit/album/<%= album.id %>" method="post">
-          <input type="submit" value="Edytuj">
-      </form>
-      <% } %>
-    </div>
+    <form action="/albums/<%= album.album_id %>" method="GET">
+      <input type="image" src="<%= album.album_img %>" alt="img"
+        width="200px" />
+    </form>
+
+
+    <p>Uwagi : <%= album.album_note %></p>
+    <form action="/delete/album/<%= album.album_id %>" method="post">
+      <input type="hidden" name="bandId" value="<%= data[0].band_id %>">
+      <input type="submit" value="Usuń">
+    </form>
+    <form action="/edit/album/<%= album.album_id %>" method="post">
+      <input type="hidden" name="bandId" value="<%= data[0].band_id %>">
+      <input type="submit" value="Edytuj">
+    </form>
+    <% } }; %>
+  </div>
 </div>
 
 <%- include('partials/footer.ejs'); -%>
