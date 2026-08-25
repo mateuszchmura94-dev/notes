@@ -4,10 +4,10 @@
 <div class="row">
     <div class="card">
       <h5>Wynik: <%= band.score %></h5>
-      <img src="<%= band.img %>" alt="Album Image" style="width:300px; height:auto;">
+      <img src="<%= band.img %>" alt="Album Image" style="width: 100%; height:auto;">
       <p>Uwagi : <%= band.note %></p>
     </div>
-   <form action="/<%= band.id %>/add" method="post">
+   <form action="/addalbum/<%= band.id %>" method="post">
     <input type="text" name="albumName" placeholder="Nazwa płyty">
     <input type="number" name="albumScore" placeholder="Ocena">
     <input type="text" name="albumNote" placeholder="Uwagi">
@@ -19,8 +19,14 @@
         <% for(let album of albumsList) { %>
       <h2><%= album.name %></h2>
       <h5>Wynik: <%= album.score %></h5>
-      <a href="/<%= band.id %>/<%= album.id %>">
-      <img src="<%= album.img %>" alt="Album Image" style="width:300px; height:auto;"></a>
+      
+      <form action="/albums/<%= album.id %>" method="GET">
+  <input type="hidden" name="bandId" value="<%= band.id %>" />
+  <input type="image" src="<%= album.img %>" alt="img" width="200px"/>
+</form>
+
+     
+      
       <p>Uwagi : <%= album.note %></p>
       <form action="/delete/album/<%= album.id %>" method="post">
           <input type="submit" value="Usuń">

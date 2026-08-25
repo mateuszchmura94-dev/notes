@@ -4,7 +4,7 @@
 <% } else { %>
     <form action="/update/<%= edited.id %>" method="post">
 <% } %>
-    
+    <img src="<%= edited.img %>" width="300px" height="auto" alt="img">    
     <input type="text" value="<%= edited.name %>" name="name">
     <input type="number" name="score" value="<%= edited.score %>">
     <input type="text" name="note" value="<%= edited.note %>">

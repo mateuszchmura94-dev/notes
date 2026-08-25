@@ -1,41 +1,35 @@
 <%- include('partials/header.ejs'); -%>
-<article class="album-card">
-	<div class="album-card__header">
-		<% if (album.image || album.cover) { %>
-			<img
-				class="album-card__image"
-				src="<%= album.image || album.cover %>"
-				alt="<%= album.title || album.name %> album cover"
-			>
-		<% } %>
 
-		<div class="album-card__details">
-			<h2><%= album.title || album.name %></h2>
-			<% if (album.artist || album.band) { %>
-				<p><%= album.artist || album.band %></p>
-			<% } %>
-		</div>
+<h1><%= album.name %></h1>
+<div class="row">
+    <div class="card">
+      <h5>Wynik: <%= album.score %></h5>
+      <img src="<%= album.img %>" alt="Album Image" style="width: 100%; height:auto;">
+      <p>Uwagi : <%= album.note %></p>
 	</div>
+   <form action="/addsong/<%= album.id %>" method="post">
+    <input type="text" name="songName" placeholder="Nazwa piosenki">
+    <input type="number" name="songScore" placeholder="Ocena">
+    <input type="hidden" name=albumName value= "<%= album.name %>">
+    <input type="hidden" name=albumId value= "<%= album.id %>">
+    <input type="hidden" name=albumNote value= "<%= album.note %>">
+    <input type="hidden" name=bandId value= "<%= album.band_id %>">
+    <input type="hidden" name=albumImg value= "<%= album.img %>">
+    <input type="submit" value="Dodaj utwór">
+</form>
 
-	<h3>Songs</h3>
-	<% const albumSongs = album.songs || songs || []; %>
-	<% if (albumSongs.length) { %>
-		<ol class="album-card__songs">
-			<% albumSongs.forEach((song) => { %>
-				<li>
-					<% if (song.url || song.link) { %>
-						<a href="<%= song.url || song.link %>">
-							<%= song.title || song.name %>
-						</a>
-					<% } else { %>
-						<span><%= song.title || song.name || song %></span>
-					<% } %>
+<ul>
+    <% songs.forEach(function(song) { %>
+    <li>    
+    <form action="/delete/song/<%= song.id %>" method="post">
+    <%= song.name %>, ocena: <%= song.score %>
+        <input type="submit" value="Usuń">
+        </form>
 				</li>
-			<% }) %>
-		</ol>
-	<% } else { %>
-		<p>No songs found for this album.</p>
-	<% } %>
-</article>
+
+    <% }); %>
+
+</ul>
+</div>
 
 <%- include('partials/footer.ejs'); -%>
