@@ -1,4 +1,25 @@
 <script src="/scripts/main.js" defer></script>
+
+<dialog id="editModal">
+  <form id="editForm">
+    <h3 id="modalTitle">Edytuj</h3>
+    
+
+    <input type="hidden" id="editId" name="id">
+    <input type="hidden" id="editType" name="type"> <!-- 'band', 'album' lub 'song' -->
+    <input type="hidden" id="editBandId" name="bandId">
+
+    <input type="text" id="editName" name="name" placeholder="Nazwa" required>
+    <input type="number" id="editScore" name="score" placeholder="Ocena (1-5)" min="1" max="5" required>
+    <input type="text" id="editNote" name="note" placeholder="Uwagi">
+
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+      <button type="submit">Zapisz</button>
+      <button type="button" onclick="closeEditModal()">Anuluj</button>
+    </div>
+  </form>
+</dialog>
+
 </main>
 <footer>Copyright Mateusz Chmura © <%= new Date().getFullYear() %>
 </footer>

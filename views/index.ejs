@@ -1,26 +1,39 @@
 <%- include('partials/header.ejs'); -%>
 <h1>Moje ulubione zespoły</h1>
-<form action="/add/band" method="post">
-  <input type="text" name="bandName" placeholder="Nazwa zespołu">
-  <input type="number" name="bandScore" placeholder="Ocena" max="5" min="1">
-  <input type="text" name="bandNote" placeholder="Uwagi">
-  <input type="submit" value="Dodaj zespół">
+<form id="newBandForm">
+  <input id="newName" type="text" name="bandName" placeholder="Nazwa zespołu" required>
+  <input id="newScore" type="number" name="bandScore" placeholder="Ocena" max="5" min="0" required>
+  <input id="newNote" type="text" name="bandNote" placeholder="Uwagi">
+  <button type="submit">Dodaj zespół</button>
 </form>
+<div class="sorting-container" style="margin-bottom: 20px;">
+  <form action="/" method="GET" id="sortForm">
+    <label for="sortSelect">Sortuj według:</label>
+    <select id="sortSelect" name="sort" onchange="this.form.submit()">
+      <option value="name_asc" <%= currentSort === 'name_asc' ? 'selected' : '' %>>Nazwa (A-Z)</option>
+      <option value="name_desc" <%= currentSort === 'name_desc' ? 'selected' : '' %>>Nazwa (Z-A)</option>
+      <option value="score_desc" <%= currentSort === 'score_desc' ? 'selected' : '' %>>Ocena (od najwyższej)</option>
+      <option value="score_asc" <%= currentSort === 'score_asc' ? 'selected' : '' %>>Ocena (od najniższej)</option>
+    </select>
+  </form>
+</div>
 <div class="row">
   <div class="card">
     <% for(let band of bandList) { %>
+    <div id="band-<%= band.id %>">
     <h2><%= band.name %></h2>
     <h5>Wynik: <%= band.score %></h5>
     <a href="/<%= band.id %>">
       <img src="<%= band.img %>" alt="Album Image"
         style="width:100%; height:auto;"></a>
     <p>Uwagi : <%= band.note %></p>
-    <form action="/delete/<%= band.id %>" method="post">
-      <input type="submit" value="Usuń">
-    </form>
-    <form action="/edit/<%= band.id %>" method="post">
-      <input type="submit" value="Edytuj">
-    </form>
+      <button onclick="deleteBand('<%= band.id %>')">Usuń</button>
+
+<button onclick="openEditModal('<%= band.id %>', 'band', '<%= band.name %>', '<%= band.score %>', '<%= band.note %>')">
+  Edytuj
+</button>
+
+    </div>
     <% } %>
   </div>
 </div>

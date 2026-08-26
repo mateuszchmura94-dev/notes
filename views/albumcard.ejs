@@ -8,22 +8,39 @@
       style="width: 100%; height:auto;">
     <p>Uwagi : <%= data[0].album_note %></p>
   </div>
-  <form action="/add/song/<%= data[0].album_id %>" method="post">
-    <input type="text" name="songName" placeholder="Nazwa piosenki">
-    <input type="number" name="songScore" placeholder="Ocena" max="5" min="1">
-    <input type="submit" value="Dodaj utwór">
-  </form>
+
+<% if (data.length > 0 && data[0].song_id) { %>
+  <div class="sorting-container" style="margin: 20px 0;">
+    <form action="/albums/<%= data[0].album_id %>" method="GET">
+      <label for="sortSelect">Sortuj utwory:</label>
+      <select id="sortSelect" name="sort" onchange="this.form.submit()">
+        <option value="score_desc" <%= currentSort === 'score_desc' ? 'selected' : '' %>>Ocena (od najwyższej)</option>
+        <option value="score_asc" <%= currentSort === 'score_asc' ? 'selected' : '' %>>Ocena (od najniższej)</option>
+        <option value="name_asc" <%= currentSort === 'name_asc' ? 'selected' : '' %>>Nazwa (A-Z)</option>
+        <option value="name_desc" <%= currentSort === 'name_desc' ? 'selected' : '' %>>Nazwa (Z-A)</option>
+      </select>
+    </form>
+  </div>
+<% } %>
+
+  <form id="newSongForm">
+  <input id="newSongName" type="text" name="songName" placeholder="Nazwa utworu" required>
+  <input id="newSongScore" type="number" name="songScore" placeholder="Ocena" max="5" min="0" required>
+  <input id="albumId" type="hidden" name="albumId" value="<%= data[0].album_id %>">
+  <button type="submit">Dodaj utwór</button>
+   </form>
   <% if (data[0].song_id) { %>
-  <ul>
+  <ul id="songList">
     <% data.forEach(function(song) { %>
-    <li>
+    <li id="song-<%= song.song_id %>">
       <%= song.song_name %>, ocena: <%= song.song_score %>
-      <form action="/delete/song/<%= song.song_id %>" method="post">
-        <input type="submit" value="Usuń">
-      </form>
-      <form action="/edit/song/<%= song.song_id %>" method="post">
-        <input type="submit" value="Edytuj">
-      </form>
+      <button onclick="deleteSong('<%= song.song_id %>')">Usuń</button>
+    
+      
+      <button onclick="openEditModal('<%= song.song_id %>', 'song', '<%= song.song_name %>', '<%= song.song_score %>', '', '<%= data[0].album_id %>')">
+  Edytuj
+</button>
+
     </li>
 
     <% })}; %>

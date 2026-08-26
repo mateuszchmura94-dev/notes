@@ -4,40 +4,51 @@
 <div class="row">
   <div class="card">
     <h5>Wynik: <%= data[0].band_score %></h5>
-    <img src="<%= data[0].band_img %>" alt="Album Image"
-      style="width: 100%; height:auto;">
+    <img src="<%= data[0].band_img %>" alt="Album Image" style="width: 100%; height:auto;">
     <p>Uwagi : <%= data[0].band_note %></p>
   </div>
-  <form action="/add/album/<%= data[0].band_id %>" method="post">
-    <input type="text" name="albumName" placeholder="Nazwa płyty">
-    <input type="number" name="albumScore" placeholder="Ocena" max="5" min="1">
-    <input type="text" name="albumNote" placeholder="Uwagi">
-    <input type="hidden" name="bandName" value="<%= data[0].band_name %>">
-    <input type="submit" value="Dodaj płytę">
+  
+  <form id="newAlbumForm">
+    <input id="newAlbumName" type="text" name="albumName" placeholder="Nazwa płyty" required>
+    <input id="newAlbumScore" type="number" name="albumScore" placeholder="Ocena" max="5" min="0" required>
+    <input id="newAlbumNote" type="text" name="albumNote" placeholder="Uwagi">
+    <input id="albumBandId" type="hidden" name="bandId" value="<%= data[0].band_id %>">
+    <input id="albumBandName" type="hidden" name="bandName" value="<%= data[0].band_name %>">
+    <button type="submit">Dodaj płytę</button>
   </form>
-  <% if (data[0].album_id) { %>
-  <div class="card">
-    <% for(let album of data) { %>
-    <h2><%= album.album_name %></h2>
-    <h5>Wynik: <%= album.album_score %></h5>
 
-    <form action="/albums/<%= album.album_id %>" method="GET">
-      <input type="image" src="<%= album.album_img %>" alt="img"
-        width="200px" />
-    </form>
+  <% if (data.length > 0 && data[0].album_id) { %>
+    <div class="sorting-container" style="margin: 20px 0;">
+      <form action="/<%= data[0].band_id %>" method="GET">
+        <label for="sortSelect">Sortuj albumy:</label>
+        <select id="sortSelect" name="sort" onchange="this.form.submit()">
+          <option value="score_desc" <%= currentSort === 'score_desc' ? 'selected' : '' %>>Ocena (od najwyższej)</option>
+          <option value="score_asc" <%= currentSort === 'score_asc' ? 'selected' : '' %>>Ocena (od najniższej)</option>
+          <option value="name_asc" <%= currentSort === 'name_asc' ? 'selected' : '' %>>Nazwa (A-Z)</option>
+          <option value="name_desc" <%= currentSort === 'name_desc' ? 'selected' : '' %>>Nazwa (Z-A)</option>
+        </select>
+      </form>
+    </div>
+  
+    <div class="card">
+      <% for(let album of data) { %>
+        <div id="album-<%= album.album_id %>">
+          <h2><%= album.album_name %></h2>
+          <h5>Wynik: <%= album.album_score %></h5>
 
+          <form action="/albums/<%= album.album_id %>" method="GET">
+            <input type="image" src="<%= album.album_img %>" alt="img" width="200px" />
+          </form>
 
-    <p>Uwagi : <%= album.album_note %></p>
-    <form action="/delete/album/<%= album.album_id %>" method="post">
-      <input type="hidden" name="bandId" value="<%= data[0].band_id %>">
-      <input type="submit" value="Usuń">
-    </form>
-    <form action="/edit/album/<%= album.album_id %>" method="post">
-      <input type="hidden" name="bandId" value="<%= data[0].band_id %>">
-      <input type="submit" value="Edytuj">
-    </form>
-    <% } }; %>
-  </div>
+          <p>Uwagi : <%= album.album_note %></p>
+          <button onclick="deleteAlbum('<%= album.album_id %>')">Usuń</button>
+          <button onclick="openEditModal('<%= album.album_id %>', 'album', '<%= album.album_name %>', '<%= album.album_score %>', '<%= album.album_note %>', '<%= data[0].band_id %>')">
+            Edytuj
+          </button>
+        </div>
+      <% } %>
+    </div>
+  <% } %>
 </div>
 
 <%- include('partials/footer.ejs'); -%>

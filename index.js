@@ -16,7 +16,9 @@ const API_album = "https://www.theaudiodb.com/api/v1/json/123/searchalbum.php?s=
 app.use(bodyParser.urlencoded({
   extended: true
 }));
+app.use(express.json());
 app.use(express.static("public"));
+
 
 //DB connection
 const db = new pg.Client({
@@ -35,19 +37,42 @@ db.connect()
 //ROUTES
 //===========================================================================================================================
 async function fetchBandImg(bandName) {
-  const response = await axios.get(API_band + bandName);
-  const link = response.data.artists[0].strArtistThumb;
-  return link;
+    const response = await axios.get(API_band + bandName);
+    
+    if (response.data && response.data.artists && response.data.artists[0]) {
+      return response.data.artists[0].strArtistThumb || "/images/default.jpg";
+    }
+    return "/images/default.jpg";
 };
 
 async function fetchAlbumImg(bandName, albumName) {
   const response = await axios.get(API_album + bandName + "&a=" + albumName);
-  const link = response.data.album[0].strAlbumThumb;
-  return link;
+
+if (response.data && response.data.album && response.data.album[0]) {
+      return response.data.album[0].strAlbumThumb || "/images/default.jpg";
+    }
+    return "/images/default.jpg";
 };
 
-async function allBands() {
-  const result = await db.query("SELECT * FROM bands");
+async function allBands(sortBy = 'name_asc') {
+  let orderBy = "name ASC";
+
+  switch (sortBy) {
+    case 'name_desc':
+      orderBy = "name DESC";
+      break;
+    case 'score_desc':
+      orderBy = "score DESC, name ASC";
+      break;
+    case 'score_asc':
+      orderBy = "score ASC, name ASC";
+      break;
+    case 'name_asc':
+    default:
+      orderBy = "name ASC";
+      break;
+  }
+  const result = await db.query(`SELECT * FROM bands ORDER BY ${orderBy}`);
 
   return result.rows
 };
@@ -57,21 +82,12 @@ async function getBand(bandId) {
   return result.rows[0]
 };
 
-async function allAlbums(bandId) {
-  const result = await db.query("SELECT * FROM albums WHERE band_id = $1", [bandId]);
-
-  return result.rows
-};
 
 async function getAlbum(albumId) {
   const result = await db.query("SELECT * FROM albums WHERE id=$1;", [albumId]);
   return result.rows[0]
 };
 
-async function allSongs(albumId) {
-  const result = await db.query("SELECT * FROM songs WHERE album_id=$1;", [albumId]);
-  return result.rows
-};
 
 async function getSong(songId) {
   const result = await db.query("SELECT * FROM songs WHERE id=$1;", [songId]);
@@ -81,10 +97,12 @@ async function getSong(songId) {
 //Strona główna
 app.get("/", async (req, res) => {
   try {
-    const bands = await allBands();
+    const sortOption = req.query.sort || 'name_asc';
+    const bands = await allBands(sortOption);
     res.render("index.ejs", {
       title: "Moje ulubione zespoły",
-      bandList: bands
+      bandList: bands,
+      currentSort: sortOption
     });
   } catch (err) {
     console.error("Błąd podczas pobierania listy zespołów:", err.stack);
@@ -93,75 +111,32 @@ app.get("/", async (req, res) => {
 });
 
 //usuwanie zespołu
-app.post("/delete/:id", async (req, res) => {
+app.delete("/delete/band/:id", async (req, res) => {
   try {
     const toDelete = req.params.id;
     const albumsId = await db.query("SELECT id FROM albums WHERE band_id = $1", [toDelete]);
     const deleteSongs = await db.query("DELETE FROM songs WHERE album_id = ANY($1)", [albumsId.rows.map(row => row.id)]);
     const deleteAlbums = await db.query("DELETE FROM albums WHERE band_id = $1", [toDelete]);
     const result = await db.query("DELETE FROM bands WHERE id = $1", [toDelete]);
-    res.redirect("/");
+        res.json({ success: true, message: 'Usunięto pomyślnie' });
   } catch (err) {
     console.error("Błąd podczas usuwania zespołu:", err.stack);
     res.status(500).send("Wystąpił błąd serwera");
   };
 });
 //usuwanie albumu
-app.post("/delete/album/:id", async (req, res) => {
+app.delete("/delete/album/:id", async (req, res) => {
   try {
     const toDelete = req.params.id;
     const deleteSongs = await db.query("DELETE FROM songs WHERE album_id = $1", [toDelete]);
     const result = await db.query("DELETE FROM albums WHERE id = $1", [toDelete]);
-    const data = await db.query("SELECT b.id AS band_id, b.name AS band_name, b.note AS band_note, b.score AS band_score, b.img AS band_img, a.id AS album_id, a.name AS album_name, a.note AS album_note, a.score AS album_score, a.img AS album_img FROM bands b LEFT JOIN albums a ON b.id = a.band_id WHERE b.id = $1", [req.params.bandId]);
-
-    res.render("bandcard.ejs", {
-      title: data.rows[0].band_name,
-      data: data.rows
-    });
+    res.json({ success: true, message: 'Usunięto pomyślnie' });
   } catch (err) {
     console.error("Błąd podczas usuwania płyty:", err.stack);
     res.status(500).send("Wystąpił błąd serwera");
   };
 });
-//edytowanie zespołu
-app.post("/edit/:bandId", async (req, res) => {
-  try {
-    const toEdit = await getBand(req.params.bandId);
-    res.render("edit.ejs", {
-      edited: toEdit,
-      title: toEdit.name
-    });
-  } catch (err) {
-    console.error("Błąd podczas pobierania zespołu do edycji:", err.stack);
-    res.status(500).send("Wystąpił błąd serwera");
-  };
-});
-//edytowanie albumu
-app.post("/edit/album/:albumId", async (req, res) => {
-  try {
-    const toEdit = await getAlbum(req.params.albumId);
-    res.render("edit.ejs", {
-      edited: toEdit,
-      title: toEdit.name,
-    });
-  } catch (err) {
-    console.error("Błąd podczas pobierania płyty do edycji:", err.stack);
-    res.status(500).send("Wystąpił błąd serwera");
-  };
-});
-//edytowanie utworu
-app.post("/edit/song/:songId", async (req, res) => {
-  try {
-    const toEdit = await getSong(req.params.songId);
-    res.render("edit.ejs", {
-      edited: toEdit,
-      title: toEdit.name,
-    });
-  } catch (err) {
-    console.error("Błąd podczas pobierania utworu do edycji:", err.stack);
-    res.status(500).send("Wystąpił błąd serwera");
-  };
-});
+
 ///dodawanie zespołu
 app.post("/add/band", async (req, res) => {
   const {
@@ -172,24 +147,25 @@ app.post("/add/band", async (req, res) => {
   try {
     const link = await fetchBandImg(bandName);
     await db.query("INSERT INTO bands (name, score, note, img) VALUES ($1, $2, $3, $4)", [bandName, bandScore, bandNote, link]);
-    res.redirect("/");
+    res.json({ success: true, message: 'Zespół dodany pomyślnie' });
   } catch (err) {
     console.error("Błąd podczas dodawania zespołu:", err.stack);
     res.status(500).send("Wystąpił błąd serwera");
   }
 });
 //dodawanie płyty
-app.post("/add/album/:bandId", async (req, res) => {
+app.post("/add/album", async (req, res) => {
   const {
     albumName,
     albumScore,
     albumNote,
+    bandId,
     bandName
   } = req.body;
   try {
     const link = await fetchAlbumImg(bandName, albumName);
-    await db.query("INSERT INTO albums (name, score, note, img, band_id) VALUES ($1, $2, $3, $4, $5)", [albumName, albumScore, albumNote, link, req.params.bandId]);
-    res.redirect("/" + req.params.bandId);
+    await db.query("INSERT INTO albums (name, score, note, img, band_id) VALUES ($1, $2, $3, $4, $5)", [albumName, albumScore, albumNote, link, bandId]);
+    res.json({ success: true, message: 'Pomyślnie dodano płytę' });
   } catch (err) {
     console.error("Błąd podczas dodawania płyty:", err.stack);
     res.status(500).send("Wystąpił błąd serwera");
@@ -244,10 +220,31 @@ app.post("/update/song/:songId", async (req, res) => {
 //wyswietlanie zespolu
 app.get("/:bandId", async (req, res) => {
   try {
-    const data = await db.query("SELECT b.id AS band_id, b.name AS band_name, b.note AS band_note, b.score AS band_score, b.img AS band_img, a.id AS album_id, a.name AS album_name, a.note AS album_note, a.score AS album_score, a.img AS album_img FROM bands b LEFT JOIN albums a ON b.id = a.band_id WHERE b.id = $1", [req.params.bandId]);
+    const sortOption = req.query.sort || 'score_desc';
+    let orderBy = "a.score DESC, a.name ASC";
+    switch (sortOption) {
+      case 'score_asc':
+        orderBy = "a.score ASC, a.name ASC";
+        break;
+      case 'name_asc':
+        orderBy = "a.name ASC";
+        break;
+      case 'name_desc':
+        orderBy = "a.name DESC";
+        break;
+      case 'score_desc':
+      default:
+        orderBy = "a.score DESC, a.name ASC";
+        break;
+    }
+    const band = await getBand(req.params.bandId);
+    if (!band) return res.status(404).send("Nie znaleziono zespołu");
+    const data = await db.query(`SELECT b.id AS band_id, b.name AS band_name, b.note AS band_note, b.score AS band_score, b.img AS band_img, a.id AS album_id, a.name AS album_name, a.note AS album_note, a.score AS album_score, a.img AS album_img FROM bands b LEFT JOIN albums a ON b.id = a.band_id WHERE b.id = $1 ORDER BY ${orderBy}`, [req.params.bandId]);
     res.render("bandcard.ejs", {
-      title: data.rows[0].band_name,
-      data: data.rows
+    title: band.name,
+     band: band,
+     data: data.rows,
+    currentSort: sortOption
     });
   } catch (err) {
     console.error("Błąd podczas wyświetlania zespołu:", err.stack);
@@ -257,47 +254,80 @@ app.get("/:bandId", async (req, res) => {
 //wyswietlanie plyty
 app.get("/albums/:albumId", async (req, res) => {
   try {
-    const data = await db.query("SELECT a.id AS album_id, a.name AS album_name, a.note AS album_note, a.score AS album_score, a.img AS album_img, s.id AS song_id, s.name AS song_name, s.score AS song_score FROM albums a LEFT JOIN songs s ON a.id = s.album_id WHERE a.id = $1", [req.params.albumId]);
+    const sortOption = req.query.sort || 'score_desc';
+    
+    let orderBy = "s.score DESC, s.name ASC";
+    switch (sortOption) {
+      case 'score_asc':
+        orderBy = "s.score ASC, s.name ASC";
+        break;
+      case 'name_asc':
+        orderBy = "s.name ASC";
+        break;
+      case 'name_desc':
+        orderBy = "s.name DESC";
+        break;
+      case 'score_desc':
+      default:
+        orderBy = "s.score DESC, s.name ASC";
+        break;
+    }
+
+    const data = await db.query(`SELECT a.id AS album_id, a.name AS album_name, a.note AS album_note, a.score AS album_score, a.img AS album_img, s.id AS song_id, s.name AS song_name, s.score AS song_score FROM albums a LEFT JOIN songs s ON a.id = s.album_id WHERE a.id = $1 ORDER BY ${orderBy}`, [req.params.albumId]);
     res.render("albumcard.ejs", {
       title: data.rows[0].album_name,
-      data: data.rows
+      data: data.rows,
+      currentSort: sortOption
     });
   } catch (err) {
     console.error("Błąd podczas wyświetlania płyty:", err.stack);
     res.status(500).send("Wystąpił błąd serwera");
   };
 });
-app.post("/add/song/:albumId", async (req, res) => {
+//dodawanie utworu
+app.post("/add/song", async (req, res) => {
   const {
     songName,
-    songScore
+    songScore,
+    albumId
   } = req.body;
   try {
-    await db.query("INSERT INTO songs (name, score, album_id) VALUES ($1, $2, $3)", [songName, songScore, req.params.albumId]);
-    const data = await db.query("SELECT a.id AS album_id, a.name AS album_name, a.note AS album_note, a.score AS album_score, a.img AS album_img, s.id AS song_id, s.name AS song_name, s.score AS song_score FROM albums a LEFT JOIN songs s ON a.id = s.album_id WHERE a.id = $1", [req.params.albumId]);
-    res.render("albumcard.ejs", {
-      title: data.rows[0].album_name,
-      data: data.rows
-    });
+    await db.query("INSERT INTO songs (name, score, album_id) VALUES ($1, $2, $3)", [songName, songScore, albumId]);
+    res.json({ success: true, message: 'Pomyślnie dodano utwór' });
   } catch (err) {
     console.error("Błąd podczas dodawania utworu:", err.stack);
     res.status(500).send("Wystąpił błąd serwera");
   }
 });
 //usuwanie utworu
-app.post("/delete/song/:id", async (req, res) => {
+app.delete("/delete/song/:id", async (req, res) => {
   try {
     const toDelete = req.params.id;
-    const result = await db.query("DELETE FROM songs WHERE id = $1", [toDelete]);;
-    const data = await db.query("SELECT a.id AS album_id, a.name AS album_name, a.note AS album_note, a.score AS album_score, a.img AS album_img, s.id AS song_id, s.name AS song_name, s.score AS song_score FROM albums a LEFT JOIN songs s ON a.id = s.album_id WHERE a.id = $1", [req.params.albumId]);
-    res.render("albumcard.ejs", {
-      title: data.rows[0].album_name,
-      data: data.rows
-    });
+    const result = await db.query("DELETE FROM songs WHERE id = $1", [toDelete]);
+    res.json({ success: true, message: 'Usunięto pomyślnie' });
   } catch (err) {
     console.error("Błąd podczas usuwania utworu:", err.stack);
     res.status(500).send("Wystąpił błąd serwera");
   };
+});
+app.put("/update/:type/:id", async (req, res) => {
+  const { type, id } = req.params;
+  const { name, score, note } = req.body;
+
+  try {
+    if (type === 'band') {
+      await db.query("UPDATE bands SET name = $1, score = $2, note = $3 WHERE id = $4", [name, score, note, id]);
+    } else if (type === 'album') {
+      await db.query("UPDATE albums SET name = $1, score = $2, note = $3 WHERE id = $4", [name, score, note, id]);
+    } else if (type === 'song') {
+      await db.query("UPDATE songs SET name = $1, score = $2 WHERE id = $3", [name, score, id]);
+    }
+
+    res.json({ success: true, message: 'Zaktualizowano pomyślnie' });
+  } catch (err) {
+    console.error("Błąd podczas aktualizacji:", err.stack);
+    res.status(500).json({ message: 'Błąd serwera' });
+  }
 });
 
 //Listening
